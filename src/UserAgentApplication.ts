@@ -205,6 +205,8 @@ export class UserAgentApplication {
 
   private _navigateToLoginRequestUrl: boolean;
 
+  private _isAngular: boolean = false;
+
   /*
    * Initialize a UserAgentApplication with a given clientId and authority.
    * @constructor
@@ -229,6 +231,7 @@ export class UserAgentApplication {
         logger?: Logger,
         loadFrameTimeout?: number,
         navigateToLoginRequestUrl?: boolean,
+        isAngular?:boolean
       } = {}) {
       const {
           validateAuthority = true,
@@ -237,7 +240,8 @@ export class UserAgentApplication {
           postLogoutRedirectUri = window.location.href.split("?")[0].split("#")[0],
           logger = new Logger(null),
           loadFrameTimeout = 6000,
-          navigateToLoginRequestUrl = true
+          navigateToLoginRequestUrl = true,
+          isAngular = false
       } = options;
 
     this.loadFrameTimeout = loadFrameTimeout;
@@ -253,6 +257,7 @@ export class UserAgentApplication {
     this._activeRenewals = {};
     this._cacheLocation = cacheLocation;
     this._navigateToLoginRequestUrl = navigateToLoginRequestUrl;
+    this._isAngular = isAngular;
     if (!this._cacheLocations[cacheLocation]) {
       throw new Error("Cache Location is not valid. Provided value:" + this._cacheLocation + ".Possible values are: " + this._cacheLocations.localStorage + ", " + this._cacheLocations.sessionStorage);
     }
@@ -265,16 +270,19 @@ export class UserAgentApplication {
     window.callBacksMappedToRenewStates = {};
     var urlHash = window.location.hash;
     var isCallback = this.isCallback(urlHash);
-    
-    if (isCallback) {
-        this.handleAuthenticationResponse.call(this, urlHash);
-    }
-    else {
-        var pendingCallback = this._cacheStorage.getItem(Constants.urlHash);
-        if (pendingCallback) {
-            this.processCallBack(pendingCallback);
+
+    if (!this._isAngular) {
+        if (isCallback) {
+            this.handleAuthenticationResponse.call(this, urlHash);
+        }
+        else {
+            var pendingCallback = this._cacheStorage.getItem(Constants.urlHash);
+            if (pendingCallback) {
+                this.processCallBack(pendingCallback);
+            }
         }
     }
+   
   }
 
   /*
@@ -1666,5 +1674,9 @@ export class UserAgentApplication {
     */
   private isInIframe() {
       return window.parent !== window;
+  }
+
+  loginInProgress(): boolean {
+      return this._loginInProgress;
   }
 }

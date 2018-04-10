@@ -83,7 +83,8 @@ var UserAgentApplication = /** @class */ (function () {
          * @hidden
          */
         this._tokenReceivedCallback = null;
-        var _a = options.validateAuthority, validateAuthority = _a === void 0 ? true : _a, _b = options.cacheLocation, cacheLocation = _b === void 0 ? "sessionStorage" : _b, _c = options.redirectUri, redirectUri = _c === void 0 ? window.location.href.split("?")[0].split("#")[0] : _c, _d = options.postLogoutRedirectUri, postLogoutRedirectUri = _d === void 0 ? window.location.href.split("?")[0].split("#")[0] : _d, _e = options.logger, logger = _e === void 0 ? new Logger(null) : _e, _f = options.loadFrameTimeout, loadFrameTimeout = _f === void 0 ? 6000 : _f, _g = options.navigateToLoginRequestUrl, navigateToLoginRequestUrl = _g === void 0 ? true : _g;
+        this._isAngular = false;
+        var _a = options.validateAuthority, validateAuthority = _a === void 0 ? true : _a, _b = options.cacheLocation, cacheLocation = _b === void 0 ? "sessionStorage" : _b, _c = options.redirectUri, redirectUri = _c === void 0 ? window.location.href.split("?")[0].split("#")[0] : _c, _d = options.postLogoutRedirectUri, postLogoutRedirectUri = _d === void 0 ? window.location.href.split("?")[0].split("#")[0] : _d, _e = options.logger, logger = _e === void 0 ? new Logger(null) : _e, _f = options.loadFrameTimeout, loadFrameTimeout = _f === void 0 ? 6000 : _f, _g = options.navigateToLoginRequestUrl, navigateToLoginRequestUrl = _g === void 0 ? true : _g, _h = options.isAngular, isAngular = _h === void 0 ? false : _h;
         this.loadFrameTimeout = loadFrameTimeout;
         this.clientId = clientId;
         this.validateAuthority = validateAuthority;
@@ -97,6 +98,7 @@ var UserAgentApplication = /** @class */ (function () {
         this._activeRenewals = {};
         this._cacheLocation = cacheLocation;
         this._navigateToLoginRequestUrl = navigateToLoginRequestUrl;
+        this._isAngular = isAngular;
         if (!this._cacheLocations[cacheLocation]) {
             throw new Error("Cache Location is not valid. Provided value:" + this._cacheLocation + ".Possible values are: " + this._cacheLocations.localStorage + ", " + this._cacheLocations.sessionStorage);
         }
@@ -108,13 +110,15 @@ var UserAgentApplication = /** @class */ (function () {
         window.callBacksMappedToRenewStates = {};
         var urlHash = window.location.hash;
         var isCallback = this.isCallback(urlHash);
-        if (isCallback) {
-            this.handleAuthenticationResponse.call(this, urlHash);
-        }
-        else {
-            var pendingCallback = this._cacheStorage.getItem(Constants.urlHash);
-            if (pendingCallback) {
-                this.processCallBack(pendingCallback);
+        if (!this._isAngular) {
+            if (isCallback) {
+                this.handleAuthenticationResponse.call(this, urlHash);
+            }
+            else {
+                var pendingCallback = this._cacheStorage.getItem(Constants.urlHash);
+                if (pendingCallback) {
+                    this.processCallBack(pendingCallback);
+                }
             }
         }
     }
@@ -499,7 +503,7 @@ var UserAgentApplication = /** @class */ (function () {
     UserAgentApplication.prototype.getCachedToken = function (authenticationRequest, user) {
         var accessTokenCacheItem = null;
         var scopes = authenticationRequest.scopes;
-        var tokenCacheItems = this._cacheStorage.getAllAccessTokens(this.clientId, user.userIdentifier); //filter by clientId and user
+        var tokenCacheItems = this._cacheStorage.getAllAccessTokens(this.clientId, user ? user.userIdentifier : null); //filter by clientId and user
         if (tokenCacheItems.length === 0) {
             return null;
         }
@@ -1399,6 +1403,9 @@ var UserAgentApplication = /** @class */ (function () {
       */
     UserAgentApplication.prototype.isInIframe = function () {
         return window.parent !== window;
+    };
+    UserAgentApplication.prototype.loginInProgress = function () {
+        return this._loginInProgress;
     };
     tslib_1.__decorate([
         resolveTokenOnlyIfOutOfIframe
