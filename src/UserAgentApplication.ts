@@ -658,7 +658,7 @@ export class UserAgentApplication {
   private getCachedToken(authenticationRequest: AuthenticationRequestParameters, user: User): CacheResult {
     let accessTokenCacheItem: AccessTokenCacheItem = null;
     const scopes = authenticationRequest.scopes;
-    const tokenCacheItems = this._cacheStorage.getAllAccessTokens(this.clientId, user.userIdentifier); //filter by clientId and user
+    const tokenCacheItems = this._cacheStorage.getAllAccessTokens(this.clientId, user ? user.userIdentifier:null); //filter by clientId and user
     if (tokenCacheItems.length === 0) { // No match found after initial filtering
       return null;
     }
