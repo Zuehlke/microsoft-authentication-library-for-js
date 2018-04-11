@@ -86,7 +86,7 @@ var UserAgentApplication = /** @class */ (function () {
          */
         this._tokenReceivedCallback = null;
         this._isAngular = false;
-        var _a = options.validateAuthority, validateAuthority = _a === void 0 ? true : _a, _b = options.cacheLocation, cacheLocation = _b === void 0 ? "sessionStorage" : _b, _c = options.redirectUri, redirectUri = _c === void 0 ? window.location.href.split("?")[0].split("#")[0] : _c, _d = options.postLogoutRedirectUri, postLogoutRedirectUri = _d === void 0 ? window.location.href.split("?")[0].split("#")[0] : _d, _e = options.logger, logger = _e === void 0 ? new Logger_1.Logger(null) : _e, _f = options.loadFrameTimeout, loadFrameTimeout = _f === void 0 ? 6000 : _f, _g = options.navigateToLoginRequestUrl, navigateToLoginRequestUrl = _g === void 0 ? true : _g, _h = options.isAngular, isAngular = _h === void 0 ? false : _h;
+        var _a = options.validateAuthority, validateAuthority = _a === void 0 ? true : _a, _b = options.cacheLocation, cacheLocation = _b === void 0 ? "sessionStorage" : _b, _c = options.redirectUri, redirectUri = _c === void 0 ? window.location.href.split("?")[0].split("#")[0] : _c, _d = options.postLogoutRedirectUri, postLogoutRedirectUri = _d === void 0 ? window.location.href.split("?")[0].split("#")[0] : _d, _e = options.logger, logger = _e === void 0 ? new Logger_1.Logger(null) : _e, _f = options.loadFrameTimeout, loadFrameTimeout = _f === void 0 ? 6000 : _f, _g = options.navigateToLoginRequestUrl, navigateToLoginRequestUrl = _g === void 0 ? true : _g, _h = options.isAngular, isAngular = _h === void 0 ? false : _h, _j = options.anonymousEndpoints, anonymousEndpoints = _j === void 0 ? new Map() : _j, _k = options.endPoints, endPoints = _k === void 0 ? new Map() : _k;
         this.loadFrameTimeout = loadFrameTimeout;
         this.clientId = clientId;
         this.validateAuthority = validateAuthority;
@@ -101,6 +101,8 @@ var UserAgentApplication = /** @class */ (function () {
         this._cacheLocation = cacheLocation;
         this._navigateToLoginRequestUrl = navigateToLoginRequestUrl;
         this._isAngular = isAngular;
+        this._anonymousEndpoints = anonymousEndpoints;
+        this._endpoints = endPoints;
         if (!this._cacheLocations[cacheLocation]) {
             throw new Error("Cache Location is not valid. Provided value:" + this._cacheLocation + ".Possible values are: " + this._cacheLocations.localStorage + ", " + this._cacheLocations.sessionStorage);
         }
@@ -1408,6 +1410,45 @@ var UserAgentApplication = /** @class */ (function () {
     };
     UserAgentApplication.prototype.loginInProgress = function () {
         return this._loginInProgress;
+    };
+    UserAgentApplication.prototype.getHostFromUri = function (uri) {
+        // remove http:// or https:// from uri
+        var extractedUri = String(uri).replace(/^(https?:)\/\//, '');
+        extractedUri = extractedUri.split('/')[0];
+        return extractedUri;
+    };
+    UserAgentApplication.prototype.getResourceForEndPoint = function (endpoint) {
+        // if user specified list of anonymous endpoints, no need to send token to these endpoints, return null.
+        if (this._anonymousEndpoints.size > 0) {
+            for (var configEndpoint in this._anonymousEndpoints.keys()) {
+                if (endpoint.indexOf(configEndpoint) > -1) {
+                    return null;
+                }
+            }
+        }
+        if (this._endpoints.size > 0) {
+            for (var configEndpoint in this._endpoints.keys()) {
+                // configEndpoint is like /api/Todo requested endpoint can be /api/Todo/1
+                if (endpoint.indexOf(configEndpoint) > -1) {
+                    return this._endpoints[configEndpoint];
+                }
+            }
+        }
+        // default resource will be clientid if nothing specified
+        // App will use idtoken for calls to itself
+        // check if it's staring from http or https, needs to match with app host
+        if (endpoint.indexOf('http://') > -1 || endpoint.indexOf('https://') > -1) {
+            if (this.getHostFromUri(endpoint) === this.getHostFromUri(this._redirectUri)) {
+                return new Array(this.clientId);
+            }
+        }
+        else {
+            // in angular level, the url for $http interceptor call could be relative url,
+            // if it's relative call, we'll treat it as app backend call.            
+            return new Array(this.clientId);
+        }
+        // if not the app's own backend or not a domain listed in the endpoints structure
+        return null;
     };
     tslib_1.__decorate([
         resolveTokenOnlyIfOutOfIframe

@@ -32,6 +32,8 @@ export declare class UserAgentApplication {
     loadFrameTimeout: number;
     private _navigateToLoginRequestUrl;
     private _isAngular;
+    private _endpoints;
+    private _anonymousEndpoints;
     constructor(clientId: string, authority: string | null, tokenReceivedCallback: tokenReceivedCallback, options?: {
         validateAuthority?: boolean;
         cacheLocation?: string;
@@ -41,6 +43,8 @@ export declare class UserAgentApplication {
         loadFrameTimeout?: number;
         navigateToLoginRequestUrl?: boolean;
         isAngular?: boolean;
+        anonymousEndpoints?: Map<string, Array<string>>;
+        endPoints?: Map<string, Array<string>>;
     });
     private processCallBack(hash);
     loginRedirect(scopes?: Array<string>, extraQueryParameters?: string): void;
@@ -83,4 +87,6 @@ export declare class UserAgentApplication {
     private getScopeFromState(state);
     private isInIframe();
     loginInProgress(): boolean;
+    private getHostFromUri(uri);
+    getResourceForEndPoint(endpoint: string): Array<string>;
 }

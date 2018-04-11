@@ -207,6 +207,11 @@ export class UserAgentApplication {
 
   private _isAngular: boolean = false;
 
+  private _endpoints: Map<string, Array<string>>;
+
+  private _anonymousEndpoints: Map<string, Array<string>>;
+  
+
   /*
    * Initialize a UserAgentApplication with a given clientId and authority.
    * @constructor
@@ -231,7 +236,9 @@ export class UserAgentApplication {
         logger?: Logger,
         loadFrameTimeout?: number,
         navigateToLoginRequestUrl?: boolean,
-        isAngular?:boolean
+        isAngular?: boolean,
+        anonymousEndpoints?: Map<string, Array<string>>
+        endPoints?:Map<string,Array<string>>
       } = {}) {
       const {
           validateAuthority = true,
@@ -241,7 +248,9 @@ export class UserAgentApplication {
           logger = new Logger(null),
           loadFrameTimeout = 6000,
           navigateToLoginRequestUrl = true,
-          isAngular = false
+          isAngular = false,
+          anonymousEndpoints = new Map<string, Array<string>>(),
+          endPoints = new Map<string, Array<string>>(),
       } = options;
 
     this.loadFrameTimeout = loadFrameTimeout;
@@ -258,6 +267,8 @@ export class UserAgentApplication {
     this._cacheLocation = cacheLocation;
     this._navigateToLoginRequestUrl = navigateToLoginRequestUrl;
     this._isAngular = isAngular;
+    this._anonymousEndpoints = anonymousEndpoints;
+    this._endpoints = endPoints;
     if (!this._cacheLocations[cacheLocation]) {
       throw new Error("Cache Location is not valid. Provided value:" + this._cacheLocation + ".Possible values are: " + this._cacheLocations.localStorage + ", " + this._cacheLocations.sessionStorage);
     }
@@ -1678,5 +1689,49 @@ export class UserAgentApplication {
 
   loginInProgress(): boolean {
       return this._loginInProgress;
+  }
+
+ private getHostFromUri(uri: string): string {
+      // remove http:// or https:// from uri
+      var extractedUri = String(uri).replace(/^(https?:)\/\//, '');
+      extractedUri = extractedUri.split('/')[0];
+      return extractedUri;
+  }
+  
+  getResourceForEndPoint(endpoint: string) : Array<string> {
+      // if user specified list of anonymous endpoints, no need to send token to these endpoints, return null.
+      if (this._anonymousEndpoints.size > 0) {
+          for (let configEndpoint in this._anonymousEndpoints.keys()) {
+              if (endpoint.indexOf(configEndpoint) > -1) {
+                  return null;
+              }
+          }
+      }
+
+      if (this._endpoints.size > 0) {
+          for (let configEndpoint in this._endpoints.keys()) {
+              // configEndpoint is like /api/Todo requested endpoint can be /api/Todo/1
+              if (endpoint.indexOf(configEndpoint) > -1) {
+                  return this._endpoints[configEndpoint];
+              }
+          }
+      }
+
+      // default resource will be clientid if nothing specified
+      // App will use idtoken for calls to itself
+      // check if it's staring from http or https, needs to match with app host
+      if (endpoint.indexOf('http://') > -1 || endpoint.indexOf('https://') > -1) {
+          if (this.getHostFromUri(endpoint) === this.getHostFromUri(this._redirectUri)) {
+              return new Array<string>(this.clientId);
+          }
+      }
+      else {
+          // in angular level, the url for $http interceptor call could be relative url,
+          // if it's relative call, we'll treat it as app backend call.            
+          return new Array<string>(this.clientId);
+      }
+
+      // if not the app's own backend or not a domain listed in the endpoints structure
+      return null;
   }
 }
