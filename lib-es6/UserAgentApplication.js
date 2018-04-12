@@ -1418,17 +1418,20 @@ var UserAgentApplication = /** @class */ (function () {
     UserAgentApplication.prototype.getResourceForEndPoint = function (endpoint) {
         // if user specified list of anonymous endpoints, no need to send token to these endpoints, return null.
         if (this._anonymousEndpoints.size > 0) {
-            for (var configEndpoint in this._anonymousEndpoints.keys()) {
-                if (endpoint.indexOf(configEndpoint) > -1) {
+            for (var _i = 0, _a = Array.from(this._anonymousEndpoints.keys()); _i < _a.length; _i++) {
+                var key = _a[_i];
+                // configEndpoint is like /api/Todo requested endpoint can be /api/Todo/1
+                if (endpoint.indexOf(key) > -1) {
                     return null;
                 }
             }
         }
         if (this._endpoints.size > 0) {
-            for (var configEndpoint in this._endpoints.keys()) {
+            for (var _b = 0, _c = Array.from(this._endpoints.keys()); _b < _c.length; _b++) {
+                var key = _c[_b];
                 // configEndpoint is like /api/Todo requested endpoint can be /api/Todo/1
-                if (endpoint.indexOf(configEndpoint) > -1) {
-                    return this._endpoints[configEndpoint];
+                if (endpoint.indexOf(key) > -1) {
+                    return this._endpoints.get(key);
                 }
             }
         }

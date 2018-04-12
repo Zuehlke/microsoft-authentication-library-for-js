@@ -1701,18 +1701,18 @@ export class UserAgentApplication {
   getResourceForEndPoint(endpoint: string) : Array<string> {
       // if user specified list of anonymous endpoints, no need to send token to these endpoints, return null.
       if (this._anonymousEndpoints.size > 0) {
-          for (let configEndpoint in this._anonymousEndpoints.keys()) {
-              if (endpoint.indexOf(configEndpoint) > -1) {
+          for (let key of Array.from(this._anonymousEndpoints.keys())) {
+              // configEndpoint is like /api/Todo requested endpoint can be /api/Todo/1
+              if (endpoint.indexOf(key) > -1) {
                   return null;
               }
           }
       }
-
       if (this._endpoints.size > 0) {
-          for (let configEndpoint in this._endpoints.keys()) {
+          for (let key of Array.from(this._endpoints.keys())) {
               // configEndpoint is like /api/Todo requested endpoint can be /api/Todo/1
-              if (endpoint.indexOf(configEndpoint) > -1) {
-                  return this._endpoints[configEndpoint];
+              if (endpoint.indexOf(key) > -1) {
+                  return this._endpoints.get(key);
               }
           }
       }
