@@ -348,6 +348,9 @@ var UserAgentApplication = /** @class */ (function () {
                     reject(Constants_1.ErrorCodes.userCancelledError + ":" + Constants_1.ErrorDescription.userCancelledError);
                 }
                 window.clearInterval(pollTimer);
+                if (_this._isAngular) {
+                    _this.broadcast('msal:popUpClosed', Constants_1.ErrorCodes.userCancelledError + ":" + Constants_1.ErrorDescription.userCancelledError);
+                }
             }
             try {
                 var popUpWindowLocation = popupWindow.location;
@@ -356,6 +359,12 @@ var UserAgentApplication = /** @class */ (function () {
                     instance._loginInProgress = false;
                     instance._acquireTokenInProgress = false;
                     _this._logger.info("Closing popup window");
+                    if (_this._isAngular) {
+                        _this.broadcast('msal:popUpHashChanged', popUpWindowLocation.hash);
+                        for (var i = 0; i < _this._openedWindows.length; i++) {
+                            _this._openedWindows[i].close();
+                        }
+                    }
                 }
             }
             catch (e) {
@@ -363,6 +372,10 @@ var UserAgentApplication = /** @class */ (function () {
             }
         }, interval);
         return popupWindow;
+    };
+    UserAgentApplication.prototype.broadcast = function (eventName, data) {
+        var evt = new CustomEvent(eventName, { detail: data });
+        window.dispatchEvent(evt);
     };
     /*
      * Used to log out the current user, and redirect the user to the postLogoutRedirectUri.

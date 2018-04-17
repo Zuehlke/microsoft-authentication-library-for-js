@@ -5,6 +5,8 @@ declare global  {
         msal: Object;
         callBackMappedToRenewStates: Object;
         callBacksMappedToRenewStates: Object;
+        CustomEvent: CustomEvent;
+        Event: Event;
     }
 }
 export declare type tokenReceivedCallback = (errorDesc: string, token: string, error: string, tokenType: string) => void;
@@ -51,6 +53,7 @@ export declare class UserAgentApplication {
     loginPopup(scopes: Array<string>, extraQueryParameters?: string): Promise<string>;
     private promptUser(urlNavigate);
     private openWindow(urlNavigate, title, interval, instance, resolve?, reject?);
+    private broadcast(eventName, data);
     logout(): void;
     private clearCache();
     private openPopup(urlNavigate, title, popUpWidth, popUpHeight);

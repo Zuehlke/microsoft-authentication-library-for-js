@@ -40,7 +40,10 @@ declare global {
     interface Window {
         msal: Object;
         callBackMappedToRenewStates: Object;
-        callBacksMappedToRenewStates: Object; }
+        callBacksMappedToRenewStates: Object;
+        CustomEvent: CustomEvent;
+        Event: Event;
+    }
 }
 
 /*
@@ -505,6 +508,9 @@ export class UserAgentApplication {
           reject(ErrorCodes.userCancelledError + ":" + ErrorDescription.userCancelledError);
         }
         window.clearInterval(pollTimer);
+        if (this._isAngular) {
+            this.broadcast('msal:popUpClosed', ErrorCodes.userCancelledError + ":" + ErrorDescription.userCancelledError);
+        }
       }
 
       try {
@@ -514,6 +520,12 @@ export class UserAgentApplication {
           instance._loginInProgress = false;
           instance._acquireTokenInProgress = false;
           this._logger.info("Closing popup window");
+          if (this._isAngular) {
+              this.broadcast('msal:popUpHashChanged', popUpWindowLocation.hash);
+              for (var i = 0; i < this._openedWindows.length; i++) {
+                  this._openedWindows[i].close();
+              }
+          }
         }
       } catch (e) {
         //Cross Domain url check error. Will be thrown until AAD redirects the user back to the app"s root page with the token. No need to log or throw this error as it will create unnecessary traffic.
@@ -522,6 +534,11 @@ export class UserAgentApplication {
       interval);
 
     return popupWindow;
+  }
+
+  private broadcast(eventName: string, data: string) {
+      var evt = new CustomEvent(eventName, { detail: data });
+      window.dispatchEvent(evt);
   }
 
   /*
