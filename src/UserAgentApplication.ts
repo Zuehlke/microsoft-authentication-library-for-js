@@ -925,7 +925,7 @@ export class UserAgentApplication {
         authenticationRequest.extraQueryParameters = extraQueryParameters;
       }
 
-      let urlNavigate = authenticationRequest.createNavigateUrl(scopes) + "&prompt=select_account" + "&response_mode=fragment";
+      let urlNavigate = authenticationRequest.createNavigateUrl(scopes) + "&response_mode=fragment";
       urlNavigate = this.addHintParameters(urlNavigate, userObject);
       if (urlNavigate) {
         this._cacheStorage.setItem(Constants.stateAcquireToken, authenticationRequest.state);
