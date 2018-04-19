@@ -502,7 +502,7 @@ var UserAgentApplication = /** @class */ (function () {
         var accessTokenCacheItem = null;
         var scopes = authenticationRequest.scopes;
         var tokenCacheItems = this._cacheStorage.getAllAccessTokens(this.clientId, user.userIdentifier); //filter by clientId and user
-        if (tokenCacheItems.length === 0) {
+        if (tokenCacheItems.length === 0) { // No match found after initial filtering
             return null;
         }
         var filteredItems = [];
@@ -554,6 +554,7 @@ var UserAgentApplication = /** @class */ (function () {
             if (filteredItems.length === 0) {
                 return null;
             }
+            //only one cachedToken Found
             else if (filteredItems.length === 1) {
                 accessTokenCacheItem = filteredItems[0];
             }
@@ -729,7 +730,7 @@ var UserAgentApplication = /** @class */ (function () {
             if (extraQueryParameters) {
                 authenticationRequest.extraQueryParameters = extraQueryParameters;
             }
-            var urlNavigate = authenticationRequest.createNavigateUrl(scopes) + "&prompt=select_account" + "&response_mode=fragment";
+            var urlNavigate = authenticationRequest.createNavigateUrl(scopes) + "&response_mode=fragment";
             urlNavigate = _this.addHintParameters(urlNavigate, userObject);
             if (urlNavigate) {
                 _this._cacheStorage.setItem(Constants_1.Constants.stateAcquireToken, authenticationRequest.state);
@@ -1349,12 +1350,12 @@ var UserAgentApplication = /** @class */ (function () {
                 tokenResponse.stateResponse = stateResponse;
                 // async calls can fire iframe and login request at the same time if developer does not use the API as expected
                 // incoming callback needs to be looked up to find the request type
-                if (stateResponse === this._cacheStorage.getItem(Constants_1.Constants.stateLogin)) {
+                if (stateResponse === this._cacheStorage.getItem(Constants_1.Constants.stateLogin)) { // loginRedirect
                     tokenResponse.requestType = Constants_1.Constants.login;
                     tokenResponse.stateMatch = true;
                     return tokenResponse;
                 }
-                else if (stateResponse === this._cacheStorage.getItem(Constants_1.Constants.stateAcquireToken)) {
+                else if (stateResponse === this._cacheStorage.getItem(Constants_1.Constants.stateAcquireToken)) { //acquireTokenRedirect
                     tokenResponse.requestType = Constants_1.Constants.renewToken;
                     tokenResponse.stateMatch = true;
                     return tokenResponse;

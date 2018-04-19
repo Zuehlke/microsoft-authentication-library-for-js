@@ -1,4 +1,4 @@
-/*! msal v0.1.5 2018-04-17 */
+/*! msal v0.1.5 2018-04-19 */
 
 'use strict';
 (function webpackUniversalModuleDefinition(root, factory) {
@@ -10,7 +10,7 @@
 		exports["Msal"] = factory();
 	else
 		root["Msal"] = factory();
-})(this, function() {
+})(typeof self !== 'undefined' ? self : this, function() {
 return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
@@ -242,6 +242,7 @@ var Utils = /** @class */ (function () {
                 decoded += String.fromCharCode(c1, c2);
                 break;
             }
+            // if last one is "="
             else if (i + 1 === length - 1) {
                 bits = h1 << 18 | h2 << 12;
                 c1 = bits >> 16 & 255;
@@ -475,6 +476,9 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony export (immutable) */ __webpack_exports__["__asyncGenerator"] = __asyncGenerator;
 /* harmony export (immutable) */ __webpack_exports__["__asyncDelegator"] = __asyncDelegator;
 /* harmony export (immutable) */ __webpack_exports__["__asyncValues"] = __asyncValues;
+/* harmony export (immutable) */ __webpack_exports__["__makeTemplateObject"] = __makeTemplateObject;
+/* harmony export (immutable) */ __webpack_exports__["__importStar"] = __importStar;
+/* harmony export (immutable) */ __webpack_exports__["__importDefault"] = __importDefault;
 /*! *****************************************************************************
 Copyright (c) Microsoft Corporation. All rights reserved.
 Licensed under the Apache License, Version 2.0 (the "License"); you may not use
@@ -537,7 +541,7 @@ function __metadata(metadataKey, metadataValue) {
 function __awaiter(thisArg, _arguments, P, generator) {
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator.throw(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
         function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
@@ -636,6 +640,24 @@ function __asyncValues(o) {
     var m = o[Symbol.asyncIterator];
     return m ? m.call(o) : typeof __values === "function" ? __values(o) : o[Symbol.iterator]();
 }
+
+function __makeTemplateObject(cooked, raw) {
+    if (Object.defineProperty) { Object.defineProperty(cooked, "raw", { value: raw }); } else { cooked.raw = raw; }
+    return cooked;
+};
+
+function __importStar(mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
+    result.default = mod;
+    return result;
+}
+
+function __importDefault(mod) {
+    return (mod && mod.__esModule) ? mod : { default: mod };
+}
+
 
 /***/ }),
 /* 2 */
@@ -2112,7 +2134,7 @@ var UserAgentApplication = /** @class */ (function () {
         var accessTokenCacheItem = null;
         var scopes = authenticationRequest.scopes;
         var tokenCacheItems = this._cacheStorage.getAllAccessTokens(this.clientId, user.userIdentifier); //filter by clientId and user
-        if (tokenCacheItems.length === 0) {
+        if (tokenCacheItems.length === 0) { // No match found after initial filtering
             return null;
         }
         var filteredItems = [];
@@ -2164,6 +2186,7 @@ var UserAgentApplication = /** @class */ (function () {
             if (filteredItems.length === 0) {
                 return null;
             }
+            //only one cachedToken Found
             else if (filteredItems.length === 1) {
                 accessTokenCacheItem = filteredItems[0];
             }
@@ -2339,7 +2362,7 @@ var UserAgentApplication = /** @class */ (function () {
             if (extraQueryParameters) {
                 authenticationRequest.extraQueryParameters = extraQueryParameters;
             }
-            var urlNavigate = authenticationRequest.createNavigateUrl(scopes) + "&prompt=select_account" + "&response_mode=fragment";
+            var urlNavigate = authenticationRequest.createNavigateUrl(scopes) + "&response_mode=fragment";
             urlNavigate = _this.addHintParameters(urlNavigate, userObject);
             if (urlNavigate) {
                 _this._cacheStorage.setItem(Constants_1.Constants.stateAcquireToken, authenticationRequest.state);
@@ -2959,12 +2982,12 @@ var UserAgentApplication = /** @class */ (function () {
                 tokenResponse.stateResponse = stateResponse;
                 // async calls can fire iframe and login request at the same time if developer does not use the API as expected
                 // incoming callback needs to be looked up to find the request type
-                if (stateResponse === this._cacheStorage.getItem(Constants_1.Constants.stateLogin)) {
+                if (stateResponse === this._cacheStorage.getItem(Constants_1.Constants.stateLogin)) { // loginRedirect
                     tokenResponse.requestType = Constants_1.Constants.login;
                     tokenResponse.stateMatch = true;
                     return tokenResponse;
                 }
-                else if (stateResponse === this._cacheStorage.getItem(Constants_1.Constants.stateAcquireToken)) {
+                else if (stateResponse === this._cacheStorage.getItem(Constants_1.Constants.stateAcquireToken)) { //acquireTokenRedirect
                     tokenResponse.requestType = Constants_1.Constants.renewToken;
                     tokenResponse.stateMatch = true;
                     return tokenResponse;
